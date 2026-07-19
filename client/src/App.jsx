@@ -3,6 +3,8 @@ import { auth, isFirebaseConfigured } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import Auth from './Auth';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 function App() {
   const [topic, setTopic] = useState('');
   const [report, setReport] = useState(null);
@@ -52,7 +54,7 @@ function App() {
     setReportLoading(true);
 
     try {
-      const response = await fetch('/api/research', {
+      const response = await fetch(`${API_BASE_URL}/api/research`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic })
