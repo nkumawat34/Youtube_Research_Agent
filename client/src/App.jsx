@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { auth, isFirebaseConfigured } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import Auth from './Auth';
+import LandingPage from './LandingPage';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
@@ -13,6 +14,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('metrics');
   const [copiedKey, setCopiedKey] = useState('');
+  const [viewMode, setViewMode] = useState('landing'); // 'landing' | 'auth' | 'dashboard'
 
   const handleCopy = (text, key) => {
     navigator.clipboard.writeText(text);
@@ -32,6 +34,9 @@ function App() {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setAuthLoading(false);
+      if (firebaseUser) {
+        setViewMode('dashboard');
+      }
     });
 
     return () => unsubscribe();
@@ -46,6 +51,15 @@ function App() {
       }
     } else {
       setUser(null);
+    }
+    setViewMode('landing');
+  };
+
+  const handleLaunchApp = () => {
+    if (user) {
+      setViewMode('dashboard');
+    } else {
+      setViewMode('auth');
     }
   };
 
@@ -73,8 +87,35 @@ function App() {
     return <div className="loading-state">Loading user session...</div>;
   }
 
-  if (!user) {
-    return <Auth onMockLogin={(mockUser) => setUser(mockUser)} />;
+  // 1. Landing / Home Page view
+  if (viewMode === 'landing') {
+    return (
+      <LandingPage
+        onLaunchApp={handleLaunchApp}
+        onOpenAuth={() => setViewMode('auth')}
+      />
+    );
+  }
+
+  // 2. Auth view (if unauthenticated and chosen)
+  if (viewMode === 'auth' && !user) {
+    return (
+      <div style={{ position: 'relative' }}>
+        <div style={{ padding: '1rem 2rem', position: 'absolute', top: 0, left: 0, zIndex: 10 }}>
+          <button
+            className="ghost-button"
+            onClick={() => setViewMode('landing')}
+            style={{ fontSize: '0.85rem' }}
+          >
+            ← Back to Home Page
+          </button>
+        </div>
+        <Auth onMockLogin={(mockUser) => {
+          setUser(mockUser);
+          setViewMode('dashboard');
+        }} />
+      </div>
+    );
   }
 
   // Safe variables for reports
@@ -92,18 +133,20 @@ function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <span style={{
-            background: isFirebaseConfigured ? 'rgba(59, 130, 246, 0.2)' : 'rgba(234, 179, 8, 0.2)',
-            color: isFirebaseConfigured ? '#60a5fa' : '#fef08a',
-            padding: '0.3rem 0.7rem',
-            borderRadius: '999px',
-            fontSize: '0.75rem',
-            fontWeight: '700',
-            border: isFirebaseConfigured ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(234, 179, 8, 0.3)'
-          }}>
-            {isFirebaseConfigured ? 'Firebase' : 'Demo Auth'}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+          <button
+            className="ghost-button"
+            onClick={() => setViewMode('landing')}
+            style={{
+              padding: '0.4rem 0.9rem',
+              fontSize: '0.82rem',
+              borderRadius: '999px',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}
+          >
+            🌐 View Home Page
+          </button>
+
           <span style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>
             Logged in as: <strong style={{ color: '#f8fafc' }}>{user.email}</strong>
           </span>

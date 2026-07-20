@@ -64,17 +64,7 @@ function Auth({ onMockLogin }) {
     setLoading(true);
 
     if (!isFirebaseConfigured) {
-      // Simulate API call for Mock Auth / Demo Mode
-      setTimeout(() => {
-        setLoading(false);
-        if (onMockLogin) {
-          onMockLogin({
-            email: email,
-            uid: 'demo-user-123',
-            isAnonymous: false
-          });
-        }
-      }, 1000);
+      setError('Firebase authentication is not configured in client/.env file.');
       return;
     }
 
@@ -95,32 +85,12 @@ function Auth({ onMockLogin }) {
   return (
     <div className="auth-shell">
       <div className="auth-card">
-        <span className="auth-badge">
-          {isFirebaseConfigured ? 'Firebase Secured' : 'Demo Mode'}
-        </span>
-
         <h2>{isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
         <p style={{ margin: '0.2rem 0 1.2rem', fontSize: '0.95rem' }}>
           {isSignUp
             ? 'Sign up to access the YouTube Research Agent'
             : 'Sign-in to access the YouTube Research Agent'}
         </p>
-
-        {!isFirebaseConfigured && (
-          <div style={{
-            background: 'rgba(234, 179, 8, 0.15)',
-            border: '1px solid rgba(234, 179, 8, 0.3)',
-            borderRadius: '12px',
-            padding: '0.75rem 1rem',
-            marginBottom: '1rem',
-            fontSize: '0.85rem',
-            color: '#fef08a',
-            lineHeight: '1.4'
-          }}>
-            <strong>Note:</strong> Firebase keys are not configured in your <code>.env</code> file.
-            You can log in or sign up with any email and password in Demo Mode.
-          </div>
-        )}
 
         {error && <div className="auth-error">{error}</div>}
 

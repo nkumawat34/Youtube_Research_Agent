@@ -29,8 +29,8 @@ if (isFirebaseConfigured) {
   }
 } else {
   console.warn(
-    'Firebase environment variables are missing. The application will fallback to mock/demo auth mode. ' +
-    'Please set up VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, and VITE_FIREBASE_PROJECT_ID in client/.env'
+    'Firebase environment variables are missing. ' +
+    'Please configure VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, and VITE_FIREBASE_PROJECT_ID in client/.env'
   );
 }
 
