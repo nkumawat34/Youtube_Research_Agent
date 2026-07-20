@@ -1,7 +1,6 @@
 import https from 'https';
 import { fetch, Headers, Request, Response } from 'undici';
 import { GoogleGenAI } from '@google/genai';
-import { YoutubeTranscript } from 'youtube-transcript';
 
 globalThis.fetch = fetch;
 globalThis.Headers = Headers;
@@ -314,7 +313,7 @@ function buildVideoNarrativeBlueprint(topic, videos = []) {
   }
 
   return {
-    summary: `The likely transcript pattern is a rapid hook, a quick explanation of why ${topic} matters, then an example or comparison that keeps viewers engaged.`,
+    summary: `The likely content narrative pattern is a rapid hook, a quick explanation of why ${topic} matters, then an example or comparison that keeps viewers engaged.`,
     talkingPoints
   };
 }
@@ -381,31 +380,6 @@ function buildContentGaps(topic, videos = []) {
   return baseGaps;
 }
 
-async function fetchTranscriptsForVideos(videos = []) {
-  const results = [];
-
-  for (const video of videos.slice(0, 10)) {
-    if (!video?.id) {
-      results.push({ id: video?.id || null, transcript: '' });
-      continue;
-    }
-
-    try {
-      const transcript = await YoutubeTranscript.fetchTranscript(video.id, { lang: 'en' });
-      const text = (transcript || [])
-        .map((entry) => entry.text)
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      results.push({ id: video.id, transcript: text.slice(0, 6000) });
-    } catch (error) {
-      results.push({ id: video.id, transcript: '' });
-    }
-  }
-
-  return results;
-}
 
 async function fetchTopCommentsForVideos(videos = []) {
   const apiKey = process.env.YOUTUBE_API_KEY;
@@ -446,19 +420,17 @@ async function generateAnalysisWithGemini(topic, videos) {
   }
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  const transcripts = await fetchTranscriptsForVideos(videos);
   const comments = await fetchTopCommentsForVideos(videos);
   const payload = videos.slice(0, 10).map((video, index) => ({
     index: index + 1,
     title: video.title,
     description: video.description || '',
-    transcript: transcripts[index]?.transcript || '',
     commentText: (comments[index]?.comments || []).join(' || ')
   }));
 
   const prompt = `You are a professional YouTube growth strategist and business analyst. Analyze this research data for the topic: "${topic}".
 Videos details:
-${payload.map((item) => `- Video #${item.index}: Title: "${item.title}" | Description: "${item.description}" ${item.transcript ? `| Transcript snippet: "${item.transcript}"` : ''} ${item.commentText ? `| Top comments: "${item.commentText}"` : ''}`).join('\n')}
+${payload.map((item) => `- Video #${item.index}: Title: "${item.title}" | Description: "${item.description}" ${item.commentText ? `| Top comments: "${item.commentText}"` : ''}`).join('\n')}
 
 Generate a comprehensive SaaS business analytics report for YouTube creators. You MUST return ONLY valid JSON with exactly the following keys and structure:
 {
